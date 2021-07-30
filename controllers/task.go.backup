@@ -1,0 +1,229 @@
+package controllers
+
+import (
+	"fmt"
+	"os"
+	"context"
+	"strconv"
+	"reflect"
+	// "strings"
+	"time"
+	"github.com/gofiber/fiber/v2"
+	"github.com/jackc/pgconn"
+	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgtype"
+	"github.com/go-playground/validator/v10"
+	jwt "github.com/form3tech-oss/jwt-go"
+	"github.com/ganindrag/go-task-tracker/konst"
+	"github.com/ganindrag/go-task-tracker/utils"
+)
+
+type Task struct {
+	Id int `json:"id"`
+	ProgrammerId *int `json:"programmer_id" pgxcolumn:"programmer_id"`
+	Name string `json:"name" validate:"required"`
+	Detail *string `json:"detail"`
+	Status string `json:"status" validate:"required"`
+	Weight *int `json:"weight"`
+	CreatedAt pgtype.Timestamp `json:"-" pgxcolumn:"created_at"`
+	StartAt pgtype.Timestamp `json:"-" pgxcolumn:"start_at"`
+	EndAt pgtype.Timestamp `json:"-" pgxcolumn:"end_at"`
+	EncodedCreatedAt *time.Time `json:"created_at" pgxignored:""`
+	EncodedStartAt *time.Time `json:"start_at" pgxignored:""`
+	EncodedEndAt *time.Time `json:"end_at" pgxignored:""`
+	BugTolerance *int `json:"bug_tolerance" pgxcolumn:"bug_tolerance"`
+	ActualBug *int `json:"actual_bug" pgxcolumn:"actual_bug"`
+	Comprehension *int `json:"comprehension"`
+	IsEvaluated bool `json:"is_evaluated" pgxcolumn:"is_evaluated"`
+	ProgrammerName *string `json:"programmer_name" pgxignored:""`
+}
+
+func (task Task) ValidateStruct() map[string]string {
+    validate := validator.New()
+    err := validate.Struct(task)
+    if err != nil {
+    	return utils.ParseValidator(err.(validator.ValidationErrors))
+    }
+    return nil
+}
+
+func GetTask(c *fiber.Ctx) error {
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DB_DSN"))
+	if err != nil {
+		fmt.Println(err.Error())
+		return fiber.NewError(500, "Cannot connect to the database!")
+	}
+	defer conn.Close(context.Background());
+
+	user := c.Locals("user").(*jwt.Token).Claims.(jwt.MapClaims)
+	fmt.Println(user)
+
+	var rows pgx.Rows
+	if user["role"].(string) == "ADMIN" {
+		rows, err = conn.Query(context.Background(), "select task.*, programmer.name from task left join programmer on task.programmer_id=programmer.id")
+	} else {
+		rows, err = conn.Query(context.Background(), "select task.*, programmer.name from task left join programmer on task.programmer_id=programmer.id where programmer.id=$1", user["id"].(float64))
+	}
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return fiber.NewError(500, err.Error())
+	}
+
+	var result []Task
+	for rows.Next() {
+		var task Task
+		if err := rows.Scan(&task.Id, &task.ProgrammerId, &task.Name, &task.Detail, &task.Status, &task.Weight, &task.CreatedAt, &task.StartAt, &task.EndAt, &task.BugTolerance, &task.ActualBug, &task.Comprehension, &task.IsEvaluated, &task.ProgrammerName); err != nil {
+			fmt.Println(err.Error())
+		} else {
+			task.CreatedAt.AssignTo(&task.EncodedCreatedAt)
+			task.StartAt.AssignTo(&task.EncodedStartAt)
+			task.EndAt.AssignTo(&task.EncodedEndAt)
+			result = append(result, task)
+		}
+	}
+	return c.JSON(result)
+}
+
+func GetSingleTask(c *fiber.Ctx) error {
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DB_DSN"))
+	if err != nil {
+		fmt.Println(err.Error())
+		return fiber.NewError(500, "Cannot connect to the database!")
+	}
+	defer conn.Close(context.Background());
+	
+	var task Task
+	task.Id, err = strconv.Atoi(c.Params("id"))
+
+	err = conn.QueryRow(context.Background(), "select task.*, programmer.name from task left join programmer on task.programmer_id=programmer.id where task.id = $1", task.Id).Scan(&task.Id, &task.ProgrammerId, &task.Name, &task.Detail, &task.Status, &task.Weight, &task.CreatedAt, &task.StartAt, &task.EndAt, &task.BugTolerance, &task.ActualBug, &task.Comprehension, &task.IsEvaluated, &task.ProgrammerName)
+	if err != nil {
+		fmt.Println(err.Error())
+		return fiber.NewError(500, "Data not found!")
+	} else {
+		task.CreatedAt.AssignTo(&task.EncodedCreatedAt)
+		task.StartAt.AssignTo(&task.EncodedStartAt)
+		task.EndAt.AssignTo(&task.EncodedEndAt)
+	}
+
+	return c.JSON(task)
+}
+
+func CreateTask(c *fiber.Ctx) error {
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DB_DSN"))
+	if err != nil {
+		fmt.Println(err.Error())
+		return fiber.NewError(500, "Cannot connect to the database!")
+	}
+	defer conn.Close(context.Background())
+
+	var task Task
+    if err := c.BodyParser(&task); err != nil {
+		return fiber.NewError(400, err.Error())
+    }
+    task.CreatedAt.Set(task.EncodedCreatedAt)
+    task.StartAt.Set(task.EncodedStartAt)
+    task.EndAt.Set(task.EncodedEndAt)
+
+    if errValidator := task.ValidateStruct(); errValidator != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"message": errValidator,
+		})
+    }
+// TODO: pengecekan programmer_id
+
+	err = conn.QueryRow(context.Background(), "select nextval('task_id_seq'::regclass);").Scan(&task.Id)
+	if err != nil {
+		return err
+	}
+	
+	columnsInsert, paramsInsert, valuesInsert := utils.ParseStructToInsertSql(reflect.TypeOf(task), reflect.ValueOf(task))
+	sql := fmt.Sprintf("insert into task(%s) values(%s);", columnsInsert, paramsInsert)
+
+	commandTag, err := conn.Exec(context.Background(), sql, valuesInsert...)
+	if err != nil {
+		fmt.Println(sql)
+		if err, ok := err.(*pgconn.PgError); ok && err.Code == konst.FkViolation {
+			return fiber.NewError(400, "Data programmer not found!")
+		}
+  		return err
+	}
+
+	if commandTag.RowsAffected() > 0 {
+		return c.Status(201).JSON(fiber.Map{
+			"message": "Success",
+			"data": task,
+		})
+	}
+	fmt.Println("task not saved", task)
+	return c.JSON(fiber.Map{
+		"message": "Success but not saved",
+	})
+}
+
+func UpdateTask(c *fiber.Ctx) error {
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DB_DSN"))
+	if err != nil {
+		fmt.Println(err.Error())
+		return fiber.NewError(500, "Cannot connect to the database!")
+	}
+	defer conn.Close(context.Background())
+	
+	var task Task
+	task.Id, err = strconv.Atoi(c.Params("id"))
+
+	var idExists uint8
+	err = conn.QueryRow(context.Background(), "select 1 from task where id = $1", task.Id).Scan(&idExists)
+	if err != nil {
+		fmt.Println(err.Error())
+		return fiber.NewError(404, "Data Not Found")
+	}
+
+    if err := c.BodyParser(&task); err != nil {
+		return fiber.NewError(400, err.Error())
+    }
+    task.CreatedAt.Set(task.EncodedCreatedAt)
+    task.StartAt.Set(task.EncodedStartAt)
+    task.EndAt.Set(task.EncodedEndAt)
+
+    sqlUpdate, paramsUpdate := utils.ParseStructToUpdateSql(reflect.TypeOf(task), reflect.ValueOf(task))
+    sql := fmt.Sprintf("update task set %s where id = $1;", sqlUpdate)
+
+	_, err = conn.Exec(context.Background(), sql, paramsUpdate...)
+	if err != nil {
+		fmt.Println(err.Error())
+		fmt.Println(sql)
+		fmt.Println(sqlUpdate)
+  		return err
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Success",
+	})
+}
+
+func DeleteTask(c *fiber.Ctx) error {
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DB_DSN"))
+	if err != nil {
+		fmt.Println(err.Error())
+		return fiber.NewError(500, "Cannot connect to the database!")
+	}
+	defer conn.Close(context.Background())
+	
+	var task Task
+	task.Id, err = strconv.Atoi(c.Params("id"))
+
+	commandTag, err := conn.Exec(context.Background(), "delete from task where id = $1;", task.Id)
+	if err != nil {
+		fmt.Println(err.Error())
+  		return err
+	}
+
+	if commandTag.RowsAffected() > 0 {
+		return c.JSON(fiber.Map{
+			"message": "Success",
+		})
+	}
+
+	return fiber.NewError(404, "Data not found!")
+}
