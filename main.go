@@ -6,10 +6,12 @@ import (
     jwtware "github.com/gofiber/jwt/v2"
 	"github.com/joho/godotenv"
 	"github.com/ganindrag/go-task-tracker/controllers"
+    "github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 func main() {
-	godotenv.Load()
+	err := godotenv.Load()
+    fmt.Println(err)
     app := fiber.New(fiber.Config{
 	    ErrorHandler: func(ctx *fiber.Ctx, err error) error {
 	        code := fiber.StatusInternalServerError
@@ -26,8 +28,10 @@ func main() {
 	    },
 	})
 
-    app.Post("/login", controllers.Login)
+    app.Use(cors.New())
 
+    app.Post("/login", controllers.Login)
+    
     app.Use(jwtware.New(jwtware.Config{
         SigningKey: []byte("mysecret"),
         ErrorHandler: func(ctx *fiber.Ctx, err error) error {
