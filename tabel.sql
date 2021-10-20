@@ -1,4 +1,4 @@
-create table programmer(id bigserial primary key not null, name varchar(100), email varchar(100), password varchar(255), role varchar(5));
+create table programmer(id bigserial primary key not null, name varchar(100) not null, email varchar(100) not null, password varchar(255) not null, role varchar(5) not null);
 
 create table task(
 	id bigserial primary key not null, 
@@ -21,7 +21,7 @@ create table task(
 
 insert into programmer
 	values (default, 'admin', 'admin', md5('admin'), 'ADMIN'),
-(default, 'gege', 'gege@gmail.com', md5('gege'), 'ADMIN'),
+(default, 'gege', 'gege@gmail.com', md5('gege'), 'MNGR'),
 (default, 'joko', 'joko@gmail.com', md5('joko'), 'USER'),
-(default, 'hhowe', 'hhowe@hotmail.com', md5(random()::text), 'USER');
+(default, 'rizki', 'rizki@gmail.com', md5('rizki'), 'USER');
 

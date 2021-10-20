@@ -57,7 +57,7 @@ func GetTask(c *fiber.Ctx) error {
 
 	q := conn.Debug().Table("task").Joins("left join programmer on task.programmer_id=programmer.id").Select("task.*, programmer.name as programmer_name")
 
-	if user["role"].(string) != "ADMIN" {
+	if user["role"].(string) == "USER" {
 		q.Where("(programmer.id = ? OR programmer_id is null)", user["id"].(float64))
 	}
 
@@ -78,7 +78,7 @@ func GetTask(c *fiber.Ctx) error {
 	}
 
 	prog_id := c.Query("prog_id")
-	if user["role"].(string) == "ADMIN" && prog_id != "" {
+	if user["role"].(string) != "USER" && prog_id != "" {
 		q.Where("programmer_id = ?", prog_id)
 	}
 
@@ -238,7 +238,7 @@ func GetReport(c *fiber.Ctx) error {
 
 	q := conn.Debug().Table("task").Joins("left join programmer on task.programmer_id=programmer.id").Select("task.*, programmer.name as programmer_name").Order("start_at")
 
-	if user["role"].(string) != "ADMIN" {
+	if user["role"].(string) == "USER" {
 		q.Where("(programmer.id = ? OR programmer_id is null)", user["id"].(float64))
 	}
 
@@ -255,7 +255,7 @@ func GetReport(c *fiber.Ctx) error {
 	}
 
 	prog_id := c.Query("prog_id")
-	if user["role"].(string) == "ADMIN" && prog_id != "" {
+	if user["role"].(string) != "USER" && prog_id != "" {
 		q.Where("programmer_id = ?", prog_id)
 	}
 
