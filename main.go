@@ -57,6 +57,7 @@ func main() {
     app.Delete("/task/:id", controllers.DeleteTask);
 
     app.Get("/report", controllers.GetReport);
+    app.Get("/report/:id", controllers.GetSingleReport);
 
     app.Listen(":3000")
 }

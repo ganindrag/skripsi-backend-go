@@ -270,28 +270,7 @@ func GetReport(c *fiber.Ctx) error {
 	if len(result) > 0 {
 		for _, task := range result {
 			if task.IsEvaluated {
-				startAt := *task.StartAt
-				endAt := *task.EndAt
-				bugTolerance := *task.BugTolerance
-				actualBug := *task.ActualBug
-				weight := *task.Weight
-				comprehension := *task.Comprehension
-
-				bugPercentage := float64(bugTolerance) / float64(actualBug)
-				bugGrade := 50.0
-				if bugPercentage < 1 {
-					bugGrade = bugGrade * bugPercentage
-				}
-
-				actualDate := endAt.Sub(startAt).Hours() / 24
-				datePercentage := actualDate / float64(weight)
-				dateGrade := 30.0
-				if datePercentage < 1 {
-					dateGrade = dateGrade * datePercentage
-				}
-
-				comprehensionGrade := float64(comprehension) / 100 * 20
-
+				var dateGrade, bugGrade, comprehensionGrade = calcTaskGrade(&task)
 				total += bugGrade + dateGrade + comprehensionGrade
 				countEvaluated += 1
 			} else {
@@ -300,17 +279,8 @@ func GetReport(c *fiber.Ctx) error {
 		}
 
 		if countEvaluated > 0 {
-			grade = "A"
 			totalGrade = total / countEvaluated
-			if totalGrade >= 75 && totalGrade <= 84 {
-				grade = "B"
-			} else if totalGrade >= 60 && totalGrade <= 74 {
-				grade = "C"
-			} else if totalGrade >= 50 && totalGrade <= 59 {
-				grade = "D"
-			} else if totalGrade < 50 {
-				grade = "E"
-			}
+			grade = getAlphabetGrade(totalGrade)
 		}
 	}
 
@@ -321,5 +291,76 @@ func GetReport(c *fiber.Ctx) error {
 		"grade": grade,
 		"numberGrade": totalGrade,
 		"hasUnEvaluated": hasUnEval,
+	})
+}
+
+func calcTaskGrade(pTask *Task) (float64, float64, float64) {
+	task := *pTask
+
+	startAt := *task.StartAt
+	endAt := *task.EndAt
+	bugTolerance := *task.BugTolerance
+	actualBug := *task.ActualBug
+	weight := *task.Weight
+	comprehension := *task.Comprehension
+
+	bugPercentage := float64(bugTolerance) / float64(actualBug)
+	bugGrade := 50.0
+	if bugPercentage < 1 {
+		bugGrade = bugGrade * bugPercentage
+	}
+
+	actualDate := endAt.Sub(startAt).Hours() / 24
+	datePercentage := actualDate / float64(weight)
+	dateGrade := 30.0
+	if datePercentage < 1 {
+		dateGrade = dateGrade * datePercentage
+	}
+
+	comprehensionGrade := float64(comprehension) / 100 * 20
+
+	return dateGrade, bugGrade, comprehensionGrade
+}
+
+func getAlphabetGrade(floatGrade float64) string {
+	grade := "A"
+	if floatGrade >= 75 && floatGrade <= 84 {
+		grade = "B"
+	} else if floatGrade >= 60 && floatGrade <= 74 {
+		grade = "C"
+	} else if floatGrade >= 50 && floatGrade <= 59 {
+		grade = "D"
+	} else if floatGrade < 50 {
+		grade = "E"
+	}
+	return grade
+}
+
+func GetSingleReport(c *fiber.Ctx) error {
+	conn, err := gorm.Open(postgres.Open(os.Getenv("DB_DSN")), &gorm.Config{})
+	if err != nil {
+		fmt.Println(err.Error())
+		return fiber.NewError(500, "Cannot connect to the database!")
+	}
+	
+	var task Task
+	task.Id, err = strconv.Atoi(c.Params("id"))
+	err = conn.Table("task").Take(&task, task.Id).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		fmt.Println(err.Error())
+		return fiber.NewError(404, "Data not found!")
+	}
+
+	var dateGrade, bugGrade, comprehensionGrade = calcTaskGrade(&task)
+	var totalGrade = dateGrade + bugGrade + comprehensionGrade
+	var grade = getAlphabetGrade(totalGrade)
+
+	return c.JSON(fiber.Map{
+		"grade": grade,
+		"numberGrade": totalGrade,
+		"dateGrade": dateGrade,
+		"bugGrade": bugGrade,
+		"comprehensionGrade": comprehensionGrade,
 	})
 }
