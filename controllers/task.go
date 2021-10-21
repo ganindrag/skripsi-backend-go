@@ -352,6 +352,10 @@ func GetSingleReport(c *fiber.Ctx) error {
 		return fiber.NewError(404, "Data not found!")
 	}
 
+	if !task.IsEvaluated {
+		return fiber.NewError(404, "Data not found!")
+	}
+
 	var dateGrade, bugGrade, comprehensionGrade = calcTaskGrade(&task)
 	var totalGrade = dateGrade + bugGrade + comprehensionGrade
 	var grade = getAlphabetGrade(totalGrade)
