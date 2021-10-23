@@ -280,13 +280,13 @@ func GetReport(c *fiber.Ctx) error {
 		for i := range result {
 			if result[i].IsEvaluated {
 				var dateGrade, bugGrade, comprehensionGrade = calcTaskGrade(&result[i])
-				total += bugGrade + dateGrade + comprehensionGrade
+				tmpTotal := bugGrade + dateGrade + comprehensionGrade
+				total += tmpTotal
 				result[i].DateGrade = &dateGrade
 				result[i].BugGrade = &bugGrade
 				result[i].ComprehensionGrade = &comprehensionGrade
-				result[i].TotalGrade = &total
-				result[i].Grade = getAlphabetGrade(total)
-				fmt.Println(getAlphabetGrade(total))
+				result[i].TotalGrade = &tmpTotal
+				result[i].Grade = getAlphabetGrade(tmpTotal)
 				countEvaluated += 1
 			} else {
 				hasUnEval = true
