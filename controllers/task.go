@@ -36,6 +36,15 @@ type Task struct {
 	ProgrammerName *string `json:"programmer_name" pgxignored:""`
 }
 
+type TaskReport struct {
+	Task
+	DateGrade *float64 `json:"dategrade"`
+	BugGrade *float64 `json:"buggrade"`
+	ComprehensionGrade *float64 `json:"comprehensiongrade"`
+	TotalGrade *float64 `json:"totalgrade"`
+	Grade string `json:"grade"`
+}
+
 func (task Task) ValidateStruct() map[string]string {
     validate := validator.New()
     err := validate.Struct(task)
@@ -259,7 +268,7 @@ func GetReport(c *fiber.Ctx) error {
 		q.Where("programmer_id = ?", prog_id)
 	}
 
-	var result []Task
+	var result []TaskReport
 	q.Find(&result)
 
 	var total float64
@@ -268,10 +277,16 @@ func GetReport(c *fiber.Ctx) error {
 	var totalGrade float64 = 0.0
 	grade := ""
 	if len(result) > 0 {
-		for _, task := range result {
-			if task.IsEvaluated {
-				var dateGrade, bugGrade, comprehensionGrade = calcTaskGrade(&task)
+		for i := range result {
+			if result[i].IsEvaluated {
+				var dateGrade, bugGrade, comprehensionGrade = calcTaskGrade(&result[i])
 				total += bugGrade + dateGrade + comprehensionGrade
+				result[i].DateGrade = &dateGrade
+				result[i].BugGrade = &bugGrade
+				result[i].ComprehensionGrade = &comprehensionGrade
+				result[i].TotalGrade = &total
+				result[i].Grade = getAlphabetGrade(total)
+				fmt.Println(getAlphabetGrade(total))
 				countEvaluated += 1
 			} else {
 				hasUnEval = true
@@ -294,7 +309,7 @@ func GetReport(c *fiber.Ctx) error {
 	})
 }
 
-func calcTaskGrade(pTask *Task) (float64, float64, float64) {
+func calcTaskGrade(pTask *TaskReport) (float64, float64, float64) {
 	task := *pTask
 
 	startAt := *task.StartAt
@@ -343,7 +358,7 @@ func GetSingleReport(c *fiber.Ctx) error {
 		return fiber.NewError(500, "Cannot connect to the database!")
 	}
 	
-	var task Task
+	var task TaskReport
 	task.Id, err = strconv.Atoi(c.Params("id"))
 	err = conn.Table("task").Take(&task, task.Id).Error
 
