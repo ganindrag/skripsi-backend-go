@@ -189,7 +189,8 @@ func DeleteProgrammer(c *fiber.Ctx) error {
 	var prog Programmer
 	prog.Id, err = strconv.Atoi(c.Params("id"))
 
-	commandTag, err := conn.Exec(context.Background(), "delete from programmer where id = $1;", prog.Id)
+	commandTag, err := conn.Exec(context.Background(), "delete from feedback where programmer_id = $1;", prog.Id)
+	commandTag, err = conn.Exec(context.Background(), "delete from programmer where id = $1;", prog.Id)
 	if err != nil {
 		fmt.Println(err.Error())
   		return err

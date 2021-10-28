@@ -220,7 +220,8 @@ func DeleteTask(c *fiber.Ctx) error {
 	var task Task
 	task.Id, err = strconv.Atoi(c.Params("id"))
 
-	commandTag, err := conn.Exec(context.Background(), "delete from task where id = $1;", task.Id)
+	commandTag, err := conn.Exec(context.Background(), "delete from feedback where task_id = $1;", task.Id)
+	commandTag, err = conn.Exec(context.Background(), "delete from task where id = $1;", task.Id)
 	if err != nil {
 		fmt.Println(err.Error())
   		return err
