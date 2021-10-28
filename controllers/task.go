@@ -326,8 +326,8 @@ func calcTaskGrade(pTask *TaskReport) (float64, float64, float64) {
 		bugGrade = bugGrade * bugPercentage
 	}
 
-	actualDate := endAt.Sub(startAt).Hours() / 24
-	datePercentage := actualDate / float64(weight)
+	actualDate := endAt.Sub(startAt).Hours() / 24 + 1
+	datePercentage := float64(weight) / actualDate
 	dateGrade := 30.0
 	if datePercentage < 1 {
 		dateGrade = dateGrade * datePercentage
