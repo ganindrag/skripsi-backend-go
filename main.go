@@ -56,6 +56,9 @@ func main() {
     app.Put("/task/:id", controllers.UpdateTask);
     app.Delete("/task/:id", controllers.DeleteTask);
 
+    app.Get("/feedback", controllers.GetFeedback);
+    app.Post("/feedback", controllers.CreateFeedback);
+
     app.Get("/report", controllers.GetReport);
     app.Get("/report/:id", controllers.GetSingleReport);
 

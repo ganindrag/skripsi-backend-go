@@ -19,6 +19,20 @@ create table task(
 	REFERENCES programmer(id)
 );
 
+create table feedback(
+	id bigserial primary key not null,
+	programmer_id bigint,
+	task_id bigint,
+	feedback text,
+	created_at timestamp default now(),
+	CONSTRAINT fk_programmer_feedback
+	FOREIGN KEY(programmer_id) 
+	REFERENCES programmer(id),
+	CONSTRAINT fk_tugas_feedback
+	FOREIGN KEY(task_id) 
+	REFERENCES task(id)
+);
+
 insert into programmer
 	values (default, 'admin', 'admin', md5('admin'), 'ADMIN'),
 (default, 'gege', 'gege@gmail.com', md5('gege'), 'MNGR'),
