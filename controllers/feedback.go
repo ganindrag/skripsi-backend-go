@@ -42,7 +42,7 @@ func GetFeedback(c *fiber.Ctx) error {
 
 	taskId, _ := strconv.Atoi(c.Query("task_id"))
 
-	rows, err := conn.Query(context.Background(), "select feedback.id, feedback.feedback, created_at, programmer.name from feedback join programmer on programmer_id=programmer.id where task_id = $1", taskId)
+	rows, err := conn.Query(context.Background(), "select feedback.id, feedback.feedback, created_at, programmer.name from feedback join programmer on programmer_id=programmer.id where task_id = $1 order by created_at", taskId)
 	if err != nil {
 		fmt.Println(err.Error())
 		return fiber.NewError(500, err.Error())
