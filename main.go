@@ -5,14 +5,11 @@ import (
     "os"
 	"github.com/gofiber/fiber/v2"
     jwtware "github.com/gofiber/jwt/v2"
-	"github.com/joho/godotenv"
 	"github.com/ganindrag/go-task-tracker/controllers"
     "github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 func main() {
-	err := godotenv.Load()
-    fmt.Println(err)
     app := fiber.New(fiber.Config{
 	    ErrorHandler: func(ctx *fiber.Ctx, err error) error {
 	        code := fiber.StatusInternalServerError
