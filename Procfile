@@ -1,1 +1,1 @@
-web: bin/skripsi-backend-go
+web: bin/go-task-tracker
