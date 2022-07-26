@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+    "os"
 	"github.com/gofiber/fiber/v2"
     jwtware "github.com/gofiber/jwt/v2"
 	"github.com/joho/godotenv"
@@ -62,5 +63,5 @@ func main() {
     app.Get("/report", controllers.GetReport);
     app.Get("/report/:id", controllers.GetSingleReport);
 
-    app.Listen(":3000")
+    app.Listen(os.Getenv("PORT"))
 }
