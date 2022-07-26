@@ -55,7 +55,7 @@ func (task Task) ValidateStruct() map[string]string {
 }
 
 func GetTask(c *fiber.Ctx) error {
-	conn, err := gorm.Open(postgres.Open(os.Getenv("DB_DSN")), &gorm.Config{})
+	conn, err := gorm.Open(postgres.Open(os.Getenv("DATABASE_URL")), &gorm.Config{})
 	if err != nil {
 		fmt.Println(err.Error())
 		return fiber.NewError(500, "Cannot connect to the database!")
@@ -98,7 +98,7 @@ func GetTask(c *fiber.Ctx) error {
 }
 
 func GetSingleTask(c *fiber.Ctx) error {
-	conn, err := gorm.Open(postgres.Open(os.Getenv("DB_DSN")), &gorm.Config{})
+	conn, err := gorm.Open(postgres.Open(os.Getenv("DATABASE_URL")), &gorm.Config{})
 	if err != nil {
 		fmt.Println(err.Error())
 		return fiber.NewError(500, "Cannot connect to the database!")
@@ -117,7 +117,7 @@ func GetSingleTask(c *fiber.Ctx) error {
 }
 
 func CreateTask(c *fiber.Ctx) error {
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DB_DSN"))
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		fmt.Println(err.Error())
 		return fiber.NewError(500, "Cannot connect to the database!")
@@ -169,7 +169,7 @@ func CreateTask(c *fiber.Ctx) error {
 }
 
 func UpdateTask(c *fiber.Ctx) error {
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DB_DSN"))
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		fmt.Println(err.Error())
 		return fiber.NewError(500, "Cannot connect to the database!")
@@ -210,7 +210,7 @@ func UpdateTask(c *fiber.Ctx) error {
 }
 
 func DeleteTask(c *fiber.Ctx) error {
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DB_DSN"))
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		fmt.Println(err.Error())
 		return fiber.NewError(500, "Cannot connect to the database!")
@@ -237,7 +237,7 @@ func DeleteTask(c *fiber.Ctx) error {
 }
 
 func GetReport(c *fiber.Ctx) error {
-	conn, err := gorm.Open(postgres.Open(os.Getenv("DB_DSN")), &gorm.Config{})
+	conn, err := gorm.Open(postgres.Open(os.Getenv("DATABASE_URL")), &gorm.Config{})
 	if err != nil {
 		fmt.Println(err.Error())
 		return fiber.NewError(500, "Cannot connect to the database!")
@@ -353,7 +353,7 @@ func getAlphabetGrade(floatGrade float64) string {
 }
 
 func GetSingleReport(c *fiber.Ctx) error {
-	conn, err := gorm.Open(postgres.Open(os.Getenv("DB_DSN")), &gorm.Config{})
+	conn, err := gorm.Open(postgres.Open(os.Getenv("DATABASE_URL")), &gorm.Config{})
 	if err != nil {
 		fmt.Println(err.Error())
 		return fiber.NewError(500, "Cannot connect to the database!")

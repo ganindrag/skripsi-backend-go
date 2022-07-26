@@ -37,7 +37,7 @@ func (prog Programmer) ValidateStruct() map[string]string {
 }
 
 func GetProgrammer(c *fiber.Ctx) error {
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DB_DSN"))
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		fmt.Println(err.Error())
 		return fiber.NewError(500, "Cannot connect to the database!")
@@ -64,7 +64,7 @@ func GetProgrammer(c *fiber.Ctx) error {
 }
 
 func GetSingleProgrammer(c *fiber.Ctx) error {
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DB_DSN"))
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		fmt.Println(err.Error())
 		return fiber.NewError(500, "Cannot connect to the database!")
@@ -84,7 +84,7 @@ func GetSingleProgrammer(c *fiber.Ctx) error {
 }
 
 func CreateProgrammer(c *fiber.Ctx) error {
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DB_DSN"))
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		fmt.Println(err.Error())
 		return fiber.NewError(500, "Cannot connect to the database!")
@@ -130,7 +130,7 @@ func CreateProgrammer(c *fiber.Ctx) error {
 }
 
 func UpdateProgrammer(c *fiber.Ctx) error {
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DB_DSN"))
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		fmt.Println(err.Error())
 		return fiber.NewError(500, "Cannot connect to the database!")
@@ -179,7 +179,7 @@ func UpdateProgrammer(c *fiber.Ctx) error {
 }
 
 func DeleteProgrammer(c *fiber.Ctx) error {
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DB_DSN"))
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		fmt.Println(err.Error())
 		return fiber.NewError(500, "Cannot connect to the database!")
@@ -206,7 +206,7 @@ func DeleteProgrammer(c *fiber.Ctx) error {
 }
 
 func Login(c *fiber.Ctx) error {
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DB_DSN"))
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		fmt.Println(err.Error())
 		return fiber.NewError(500, "Cannot connect to the database!")
@@ -244,7 +244,7 @@ func Login(c *fiber.Ctx) error {
 
 
 func CheckAuth(c *fiber.Ctx) error {
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DB_DSN"))
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		fmt.Println(err.Error())
 		return fiber.NewError(500, "Cannot connect to the database!")

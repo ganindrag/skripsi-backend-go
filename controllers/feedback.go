@@ -33,7 +33,7 @@ func (feedback Feedback) ValidateStruct() map[string]string {
 }
 
 func GetFeedback(c *fiber.Ctx) error {
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DB_DSN"))
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		fmt.Println(err.Error())
 		return fiber.NewError(500, "Cannot connect to the database!")
@@ -63,7 +63,7 @@ func GetFeedback(c *fiber.Ctx) error {
 }
 
 func CreateFeedback(c *fiber.Ctx) error {
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DB_DSN"))
+	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		fmt.Println(err.Error())
 		return fiber.NewError(500, "Cannot connect to the database!")
