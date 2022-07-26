@@ -60,5 +60,5 @@ func main() {
     app.Get("/report", controllers.GetReport);
     app.Get("/report/:id", controllers.GetSingleReport);
 
-    app.Listen(os.Getenv("PORT"))
+    app.Listen(":" + os.Getenv("PORT"))
 }
